@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.Toast;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -42,12 +43,14 @@ public class GameEngine extends SurfaceView implements Runnable {
     Player player;
     float tappedX;
     float tappedY;
-    ArrayList<Rect> bullets = new ArrayList<>();
+    //ArrayList<Rect> bullets = new ArrayList<>();
+    ArrayList<Bullet> bullets = new ArrayList<>();
     ArrayList<EnemyLeg> enemyLegs = new ArrayList<>();
     int frameNumber = 0;
-    Bitmap roboArmVertical;
     Bitmap roboArmHorizontal;
+    Bitmap roboArmHorizontalLight;
     Bitmap bgGame;
+    Bitmap laserBitmap;
     public GameEngine(Context context, int w, int h) {
         super(context);
         this.holder = this.getHolder();
@@ -79,9 +82,12 @@ public class GameEngine extends SurfaceView implements Runnable {
 
         roboArmHorizontal = BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_robo_h);
-        roboArmVertical = BitmapFactory.decodeResource(this.getContext().getResources(),
-                R.drawable.ic_robo_arm_up);
+        roboArmHorizontalLight = BitmapFactory.decodeResource(this.getContext().getResources(),
+                R.drawable.ic_robo_light);
 
+        //Form the laser bitmap from drawable
+        laserBitmap = BitmapFactory.decodeResource(this.getContext().getResources(),
+                R.drawable.ic_laser);
         //Adding the enemy arms and legs
 
         //1. Bottom Right Arm
@@ -133,13 +139,13 @@ public class GameEngine extends SurfaceView implements Runnable {
         ));
         //Left Piece
         enemyLegs.add(new EnemyLeg(
-                100, roboArmVertical,
+                100, roboArmHorizontal,
                 enemy.getxPos() - 100,
                 enemy.getyPos()
         ));
         //Right Piece
         enemyLegs.add(new EnemyLeg(
-                100, roboArmVertical,
+                100, roboArmHorizontal,
                 enemy.getxPos() + 100,
                 enemy.getyPos()
         ));
@@ -162,7 +168,6 @@ public class GameEngine extends SurfaceView implements Runnable {
         }
     }
 
-
     public void pauseGame() {
         gameIsRunning = false;
         try {
@@ -179,12 +184,15 @@ public class GameEngine extends SurfaceView implements Runnable {
     }
 
     public void shootBullets() {
-        player.addBullet();
+
+        Bullet newBullet = new Bullet(this.player.getxPos() + this.player.getImage().getWidth()+10,
+                this.player.getyPos() + this.player.getImage().getHeight() / 2,laserBitmap);
+        bullets.add(newBullet);
+//      player.addBullet();
         paintbrush.setColor(Color.BLUE);
         paintbrush.setStyle(Paint.Style.FILL);
         paintbrush.setStrokeWidth(5);
-
-        bullets = player.getBullets();
+//        bullets = player.getBullets();
     }
     // ------------------------------
     // GAME ENGINE FUNCTIONS
@@ -193,13 +201,47 @@ public class GameEngine extends SurfaceView implements Runnable {
 
     public void updatePositions() {
         movePlayer(player.getImage(), this.mouseX, this.mouseY);
+
         //make the bullet move
         if (bullets.size() > 0) {
-            for (Rect bullet : bullets) {
-                bullet.left = bullet.left + 50;
-                bullet.right = bullet.right + 50;
+            for (Bullet bullet : bullets) {
+                bullet.setxPos(bullet.getxPos()+35);
+                Rect currentHitbox = bullet.getHibox();
+                currentHitbox.left = currentHitbox.left +35;
+                currentHitbox.right = currentHitbox.right +35;
+                bullet.setHibox(currentHitbox);
+                for(EnemyLeg currentLeg: enemyLegs){
+
+                    //TODO: Handle the HealthPoints Logic for each piece of Enemy
+                    //1. If the health is less than 50 then Change the image
+                    if(currentLeg.getHitPoints()<=50) {
+                        currentLeg.setImage(roboArmHorizontalLight);
+                    }
+                    //2. If the health is less than 0 then remove it from the screem
+                    if(currentLeg.getHitPoints()<=0) {
+                        currentLeg.setxPos(-100);
+                        currentLeg.setyPos(-100);
+                        Rect legHitbox = currentLeg.getHitbox();
+                        legHitbox.left = -100;
+                        legHitbox.right = -100;
+                    }
+
+                    //TODO: Check Collision between LASER and ENEMY
+                    if(bullet.getHibox().intersect(currentLeg.getHitbox())){
+                       currentLeg.setHitPoints(currentLeg.getHitPoints()-10);
+                        bullet.setxPos(-100);
+                        bullet.setyPos(-100);
+                        currentHitbox.left = -100;
+                        currentHitbox.right = -100;
+                        currentHitbox.top = -100;
+                        currentHitbox.bottom = -100;
+                        Log.d(TAG, "updatePositions: BOOM!");
+                    }
+                }
             }
         }
+        //TODO: Check Collision between enemy and player's bullets
+        //To be continued...
 
     }
 
@@ -225,8 +267,9 @@ public class GameEngine extends SurfaceView implements Runnable {
             //Draw Enemy Protective Layer
             for (EnemyLeg enemyLeg : enemyLegs) {
                 canvas.drawBitmap(enemyLeg.getImage(), enemyLeg.getxPos(), enemyLeg.getyPos(), paintbrush);
-                paintbrush.setColor(Color.CYAN);
+                paintbrush.setColor(Color.TRANSPARENT);
                 canvas.drawRect(enemyLeg.getHitbox(), paintbrush);
+                paintbrush.setColor(Color.BLUE);
             }
             paintbrush.setColor(Color.BLUE);
 
@@ -237,11 +280,15 @@ public class GameEngine extends SurfaceView implements Runnable {
             paintbrush.setColor(Color.BLUE);
 
             //Handle the bullets
-            if (frameNumber % 5 == 0) {
+            if (frameNumber % 10 == 0) {
+                //Add new new bullet every 10th frame
                 shootBullets();
             }
-            for (Rect bullet : bullets) {
-                canvas.drawRect(bullet, paintbrush);
+            for (Bullet bullet : bullets) {
+                canvas.drawBitmap(bullet.getImage(),bullet.getxPos(),bullet.getyPos(),paintbrush);
+                paintbrush.setColor(Color.TRANSPARENT);
+                canvas.drawRect(bullet.getHibox(), paintbrush);
+                paintbrush.setColor(Color.BLUE);
             }
 
             this.holder.unlockCanvasAndPost(canvas);
