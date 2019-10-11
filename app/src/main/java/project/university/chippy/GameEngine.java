@@ -26,6 +26,8 @@ public class GameEngine extends SurfaceView implements Runnable {
     // screen size
     int screenHeight;
     int screenWidth;
+    float mouseX ;
+    float mouseY ;
 
     String playerTapped ="";
 
@@ -41,8 +43,8 @@ public class GameEngine extends SurfaceView implements Runnable {
     float tappedX;
     float tappedY;
     ArrayList<Rect> bullets = new ArrayList<>();
+    ArrayList<EnemyLeg> enemyLegs = new ArrayList<>();
     int frameNumber=0;
-    Bitmap shootBitmap;
     Bitmap roboArmVertical;
     Bitmap roboArmHorizontal;
 
@@ -63,14 +65,20 @@ public class GameEngine extends SurfaceView implements Runnable {
                 R.drawable.ic_robo_resized));
         enemy.setHitbox(new Rect((int) (screenWidth*0.65),350,enemy.getImage().getWidth()+(int) (screenWidth*0.65),enemy.getImage().getHeight()+350));
 
-        shootBitmap = BitmapFactory.decodeResource(this.getContext().getResources(),
-                R.drawable.target);
+
 
         roboArmHorizontal = BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_robo_h);
         roboArmVertical = BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_robo_arm_up);
 
+        for(int i=0;i<8;i++){
+            enemyLegs.add(new EnemyLeg(
+                    100,roboArmHorizontal,
+                    enemy.getxPos(),
+                    enemy.getyPos()
+            ));
+        }
         this.printScreenInfo();
     }
 
@@ -155,14 +163,14 @@ public class GameEngine extends SurfaceView implements Runnable {
 //            canvas.drawBitmap(roboArmVertical, 500, 500, paintbrush);
             canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()-101, paintbrush);
             canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()+101, paintbrush);
+
+
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos(), paintbrush);
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos(), paintbrush);
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()-101, paintbrush);
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()+101, paintbrush);
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()+101, paintbrush);
             canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()-101, paintbrush);
-            //Draw the Shoot Button
-            canvas.drawBitmap(shootBitmap, (int)(screenWidth*.85),(int)(screenHeight*.50), paintbrush);
             //Handle the bullets
             if(frameNumber%5 == 0){
                 shootBullets();
@@ -175,8 +183,6 @@ public class GameEngine extends SurfaceView implements Runnable {
         }
     }
 
-    float mouseX ;
-    float mouseY ;
 
 
     public void movePlayer(Bitmap bullet, float mouseXPos, float mouseYPos) {
