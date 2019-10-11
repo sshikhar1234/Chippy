@@ -63,9 +63,12 @@ public class Player {
     }
     public void addBullet(){
         Log.d(TAG, "addBullet: ");
-        Rect newBullet = new Rect(this.xPos,this.xPos+10,
-                this.yPos/2,
-                this.yPos/2+10);
+        Log.d(TAG, "addBullet: "+getImage().getWidth());
+        Rect newBullet = new Rect(
+                this.xPos + getImage().getWidth()+10,
+                this.yPos + this.image.getHeight() / 2,
+                this.xPos + getImage().getWidth()+100   ,
+                this.yPos + this.image.getHeight() / 2 + 10);
         bullets.add(newBullet);
     }
 }

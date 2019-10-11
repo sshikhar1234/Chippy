@@ -12,6 +12,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import static java.lang.Math.floor;
@@ -41,6 +42,9 @@ public class GameEngine extends SurfaceView implements Runnable {
     float tappedY;
     ArrayList<Rect> bullets = new ArrayList<>();
     int frameNumber=0;
+    Bitmap shootBitmap;
+    Bitmap roboArmVertical;
+    Bitmap roboArmHorizontal;
 
     public GameEngine(Context context, int w, int h) {
         super(context);
@@ -56,8 +60,17 @@ public class GameEngine extends SurfaceView implements Runnable {
 
         enemy = new Enemy((int) (screenWidth*0.65),350);
         enemy.setImage( BitmapFactory.decodeResource(this.getContext().getResources(),
-                R.drawable.alien_ship2));
+                R.drawable.ic_robo_resized));
         enemy.setHitbox(new Rect((int) (screenWidth*0.65),350,enemy.getImage().getWidth()+(int) (screenWidth*0.65),enemy.getImage().getHeight()+350));
+
+        shootBitmap = BitmapFactory.decodeResource(this.getContext().getResources(),
+                R.drawable.target);
+
+        roboArmHorizontal = BitmapFactory.decodeResource(this.getContext().getResources(),
+                R.drawable.ic_robo_h);
+        roboArmVertical = BitmapFactory.decodeResource(this.getContext().getResources(),
+                R.drawable.ic_robo_arm_up);
+
         this.printScreenInfo();
     }
 
@@ -94,25 +107,37 @@ public class GameEngine extends SurfaceView implements Runnable {
         gameThread.start();
     }
 
+    public void shootBullets(){
+        player.addBullet();
+        paintbrush.setColor(Color.BLUE);
+        paintbrush.setStyle(Paint.Style.FILL);
+        paintbrush.setStrokeWidth(5);
 
+        bullets = player.getBullets();
+    }
     // ------------------------------
     // GAME ENGINE FUNCTIONS
     // - update, draw, setFPS
     // ------------------------------
 
     public void updatePositions() {
-
         movePlayer(player.getImage(), this.mouseX, this.mouseY);
-
+        //make the bullet move
+        if(bullets.size()>0) {
+            for (Rect bullet : bullets) {
+                bullet.left = bullet.left + 10;
+                bullet.right = bullet.right + 10;
+            }
+        }
 
     }
 
     public void redrawSprites() {
         frameNumber++;
+
         if (this.holder.getSurface().isValid()) {
             this.canvas = this.holder.lockCanvas();
             this.canvas.drawColor(Color.argb(255,255,255,255));
-            paintbrush.setColor(Color.WHITE);
             paintbrush.setColor(Color.BLUE);
             paintbrush.setStyle(Paint.Style.STROKE);
             paintbrush.setStrokeWidth(5);
@@ -126,9 +151,27 @@ public class GameEngine extends SurfaceView implements Runnable {
             canvas.drawBitmap(enemy.getImage(), enemy.getxPos(), enemy.getyPos(), paintbrush);
             canvas.drawRect(this.enemy.getHitbox(), paintbrush);
 
+            //Draw Enemy Protective Layer
+//            canvas.drawBitmap(roboArmVertical, 500, 500, paintbrush);
+            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()-101, paintbrush);
+            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()+101, paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos(), paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos(), paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()-101, paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()+101, paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()+101, paintbrush);
+            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()-101, paintbrush);
+            //Draw the Shoot Button
+            canvas.drawBitmap(shootBitmap, (int)(screenWidth*.85),(int)(screenHeight*.50), paintbrush);
+            //Handle the bullets
+            if(frameNumber%5 == 0){
+                shootBullets();
+            }
+            for(Rect bullet: bullets){
+                canvas.drawRect(bullet, paintbrush);
+            }
+
             this.holder.unlockCanvasAndPost(canvas);
-
-
         }
     }
 
@@ -157,12 +200,13 @@ public class GameEngine extends SurfaceView implements Runnable {
         player.getHitbox().top = player.getyPos();
         player.getHitbox().bottom = player.getyPos()+player.getImage().getHeight();
 
+
     }
 
 
     public void setFPS() {
         try {
-            gameThread.sleep(60);
+            gameThread.sleep(40);
         }
         catch (Exception e) {
         }
