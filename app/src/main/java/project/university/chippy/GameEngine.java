@@ -47,7 +47,7 @@ public class GameEngine extends SurfaceView implements Runnable {
     int frameNumber=0;
     Bitmap roboArmVertical;
     Bitmap roboArmHorizontal;
-
+    Bitmap bgGame;
     public GameEngine(Context context, int w, int h) {
         super(context);
         this.holder = this.getHolder();
@@ -55,15 +55,26 @@ public class GameEngine extends SurfaceView implements Runnable {
         this.screenWidth = w;
         this.screenHeight = h;
 
+        //Setting the background
+
+        this.bgGame = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_bg);
+
+        this.bgGame = Bitmap.createScaledBitmap(
+                this.bgGame,
+                this.screenWidth,
+                this.screenHeight,
+                false
+        );
+
         player = new Player(100,350);
         player.setImage( BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_player_shipp));
         player.setHitbox(new Rect(100,350,player.getImage().getWidth()+100,player.getImage().getHeight()+350));
 
-        enemy = new Enemy((int) (screenWidth*0.65),350);
+        enemy = new Enemy((int) (screenWidth*0.65),400);
         enemy.setImage( BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_robo_resized));
-        enemy.setHitbox(new Rect((int) (screenWidth*0.65),350,enemy.getImage().getWidth()+(int) (screenWidth*0.65),enemy.getImage().getHeight()+350));
+        enemy.setHitbox(new Rect((int) (screenWidth*0.65),400,enemy.getImage().getWidth()+(int) (screenWidth*0.65),enemy.getImage().getHeight()+350));
 
 
 
@@ -72,13 +83,67 @@ public class GameEngine extends SurfaceView implements Runnable {
         roboArmVertical = BitmapFactory.decodeResource(this.getContext().getResources(),
                 R.drawable.ic_robo_arm_up);
 
-        for(int i=0;i<8;i++){
+        //Adding the enemy arms and legs
+
+        //1. Bottom Right Arm
+        for(int i=1;i<4;i++){
             enemyLegs.add(new EnemyLeg(
                     100,roboArmHorizontal,
-                    enemy.getxPos(),
-                    enemy.getyPos()
+                    enemy.getxPos()+100*i,
+                    enemy.getyPos()+100*i
+            ));
+
+        }
+
+        //2. Top Left Arm
+        for(int i=1;i<4;i++){
+            enemyLegs.add(new EnemyLeg(
+                    100,roboArmHorizontal,
+                    enemy.getxPos()-100*i,
+                    enemy.getyPos()-100*i
             ));
         }
+        //3. Top Right Arm
+        for(int i=1;i<4;i++){
+                enemyLegs.add(new EnemyLeg(
+                        100,roboArmHorizontal,
+                        enemy.getxPos()+100*i,
+                        enemy.getyPos()-100*i
+                ));
+        }
+        //4. Bottom Right Arm
+        for(int i=1;i<4;i++){
+            enemyLegs.add(new EnemyLeg(
+                    100,roboArmHorizontal,
+                    enemy.getxPos()-100*i,
+                    enemy.getyPos()+100*i
+            ));
+        }
+
+        //Top
+        enemyLegs.add(new EnemyLeg(
+                100,roboArmHorizontal,
+                enemy.getxPos(),
+                enemy.getyPos()-100
+        ));
+        //Bottom
+        enemyLegs.add(new EnemyLeg(
+                100,roboArmHorizontal,
+                enemy.getxPos(),
+                enemy.getyPos()+100
+        ));
+        //Left
+        enemyLegs.add(new EnemyLeg(
+                100,roboArmVertical,
+                enemy.getxPos()-100,
+                enemy.getyPos()
+        ));
+        //Right
+        enemyLegs.add(new EnemyLeg(
+                100,roboArmVertical,
+                enemy.getxPos()+100,
+                enemy.getyPos()
+        ));
         this.printScreenInfo();
     }
 
@@ -150,27 +215,35 @@ public class GameEngine extends SurfaceView implements Runnable {
             paintbrush.setStyle(Paint.Style.STROKE);
             paintbrush.setStrokeWidth(5);
 
-            //Draw the player
-            canvas.drawBitmap(player.getImage(), player.getxPos(), player.getyPos(), paintbrush);
-            canvas.drawRect(this.player.getHitbox(), paintbrush);
-
+            //Draw the Background Image
+            canvas.drawBitmap(bgGame,0,0,paintbrush);
 
             //Draw the enemy ship
             canvas.drawBitmap(enemy.getImage(), enemy.getxPos(), enemy.getyPos(), paintbrush);
             canvas.drawRect(this.enemy.getHitbox(), paintbrush);
-
             //Draw Enemy Protective Layer
-//            canvas.drawBitmap(roboArmVertical, 500, 500, paintbrush);
-            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()-101, paintbrush);
-            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()+101, paintbrush);
+            for(EnemyLeg enemyLeg: enemyLegs){
+                canvas.drawBitmap(enemyLeg.getImage(),enemyLeg.getxPos(),enemyLeg.getyPos(),paintbrush);
+            }
 
 
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos(), paintbrush);
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos(), paintbrush);
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()-101, paintbrush);
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()+101, paintbrush);
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()+101, paintbrush);
-            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()-101, paintbrush);
+//            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()-101, paintbrush);
+//            canvas.drawBitmap(roboArmVertical, enemy.getxPos(), enemy.getyPos()+101, paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos(), paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos(), paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()-101, paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()+101, paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()-101, enemy.getyPos()+101, paintbrush);
+//            canvas.drawBitmap(roboArmHorizontal, enemy.getxPos()+101, enemy.getyPos()-101, paintbrush);
+            //Draw the player
+            canvas.drawBitmap(player.getImage(), player.getxPos(), player.getyPos(), paintbrush);
+            paintbrush.setColor(Color.TRANSPARENT);
+            canvas.drawRect(this.player.getHitbox(), paintbrush);
+            paintbrush.setColor(Color.BLUE);
+
+
+
+
             //Handle the bullets
             if(frameNumber%5 == 0){
                 shootBullets();
