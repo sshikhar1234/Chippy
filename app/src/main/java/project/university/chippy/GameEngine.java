@@ -62,10 +62,10 @@ public class GameEngine extends SurfaceView implements Runnable {
         this.paintbrush = new Paint();
         this.screenWidth = w;
         this.screenHeight = h;
-this.context = context;
+        this.context = context;
         //Setting the background
 
-        this.bgGame = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_bg);
+        this.bgGame = BitmapFactory.decodeResource(context.getResources(), R.drawable.bg_space);
 
         this.bgGame = Bitmap.createScaledBitmap(
                 this.bgGame,
@@ -239,6 +239,7 @@ this.context = context;
                 if(bullet.getHibox().intersect(this.enemy.getHitbox()))
                 {
                     if(enemyHealth>0){
+
                         enemyHealth = enemyHealth - 20;
                     }
                     else
@@ -246,16 +247,21 @@ this.context = context;
                         Log.d(TAG, "updatePositions: BOOM");
                         enemy.setxPos(-100);
                         enemy.setyPos(-100);
+                        //Change enemy hitbox to out of screen
+                        Rect enemyHitBox = new Rect(-100,-100,-100,-100);
+                        this.enemy.setHitbox(enemyHitBox);
+
+                        //Take enemy legs out of screen
                         for(EnemyLeg currentLeg: enemyLegs) {
                             currentLeg.setxPos(-100);
                             currentLeg.setyPos(-100);
                             Rect legHitbox = currentLeg.getHitbox();
                             legHitbox.left = -100;
                             legHitbox.right = -100;
-                            Rect enemyHitBox = new Rect(-100,-100,-100,-100);
-                            this.enemy.setHitbox(enemyHitBox);
-                            context.startActivity(new Intent(context,GameWinAcitivity.class));
                         }
+                        //Launch Game Over screen
+                        context.startActivity(new Intent(context,GameWinAcitivity.class));
+
                     }
 
                 }
@@ -331,9 +337,9 @@ this.context = context;
             paintHealth.setTextSize(40);
             paintHealth.setColor(Color.WHITE);
             //Draw the player and enemy health stats
-            canvas.drawText("Player Health: "+playerHealth,100,100,paintHealth);
+            canvas.drawText("Player Health: "+playerHealth,100,(int)(screenHeight*.90),paintHealth);
             if(enemyHealth>0){
-                canvas.drawText("Enemy Health: "+enemyHealth,(int)(screenWidth*.70),100,paintHealth);
+                canvas.drawText("Enemy Health: "+enemyHealth,(int)(screenWidth*.70),(int)(screenHeight*.90),paintHealth);
             }
             paintbrush.setColor(Color.TRANSPARENT);
             canvas.drawRect(this.player.getHitbox(), paintbrush);
