@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Random;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.sqrt;
@@ -208,15 +209,88 @@ public class GameEngine extends SurfaceView implements Runnable {
     // ------------------------------
 
     public void updatePositions() {
-
-
         //Check Game OVer and Game Win Condition
-
         if(playerHealth == 0){
             //Game OVer
             context.startActivity(new Intent(context,GameOverActivity.class));
         }
+        Random r = new Random();
+//        int random = r.nextInt(10 + 5) - 10;
+        int random = r.nextInt(10 );
 
+
+        // Make Enemy Go up on every 20th frame like 20,40,60 etc
+        if(frameNumber%20 == 0){
+            enemy.setyPos(enemy.getyPos()+random);
+
+            Rect currentEHitbox = enemy.getHitbox();
+            currentEHitbox.top = currentEHitbox.top +random;
+            currentEHitbox.bottom = currentEHitbox.bottom +random;
+            enemy.setHitbox(currentEHitbox);
+
+            for(EnemyLeg currentLeg: enemyLegs) {
+                currentLeg.setyPos(currentLeg.yPos+random);
+                Rect legHitbox = currentLeg.getHitbox();
+                legHitbox.top = legHitbox.top +random;
+                legHitbox.bottom = legHitbox.bottom +random;
+            }
+        }
+        // Make Enemy Go Down on every 20th frame like 22,42,62 etc
+        if(frameNumber%20 == 2){
+            enemy.setyPos(enemy.getyPos()-random);
+
+            Rect currentEHitbox = enemy.getHitbox();
+            currentEHitbox.top = currentEHitbox.top - random;
+            currentEHitbox.bottom = currentEHitbox.bottom - random;
+            enemy.setHitbox(currentEHitbox);
+
+            for(EnemyLeg currentLeg: enemyLegs) {
+                currentLeg.setyPos(currentLeg.yPos-random);
+                Rect currentHitbox = currentLeg.getHitbox();
+                currentHitbox.top = currentHitbox.top - random;
+                currentHitbox.bottom = currentHitbox.bottom - random;
+
+            }
+        }
+        // Make Enemy Go Right on every 20th frame like 24,44,64 etc
+
+//
+        if(frameNumber%20 == 4){
+            enemy.setxPos(enemy.getxPos()+random);
+
+            Rect currentEHitbox = enemy.getHitbox();
+            currentEHitbox.left = currentEHitbox.left +random;
+            currentEHitbox.right = currentEHitbox.right +random;
+            enemy.setHitbox(currentEHitbox);
+
+            for(EnemyLeg currentLeg: enemyLegs) {
+                currentLeg.setxPos(currentLeg.xPos+random);
+                Rect legHitbox = currentLeg.getHitbox();
+                legHitbox.left = legHitbox.left +random;
+                legHitbox.right = legHitbox.right +random;
+            }
+        }
+        // Make Enemy Go Left on every 20th frame like 26,46,66 etc
+        if(frameNumber%20 == 6){
+            enemy.setxPos(enemy.getxPos()-random);
+
+            Rect currentEHitbox = enemy.getHitbox();
+            currentEHitbox.left = currentEHitbox.left - random;
+            currentEHitbox.right = currentEHitbox.right - random;
+            enemy.setHitbox(currentEHitbox);
+
+            for(EnemyLeg currentLeg: enemyLegs) {
+                currentLeg.setxPos(currentLeg.xPos-random);
+                Rect currentHitbox = currentLeg.getHitbox();
+                currentHitbox.left = currentHitbox.left - random;
+                currentHitbox.right = currentHitbox.right - random;
+
+            }
+        }
+//
+        //Make Enemy Move
+
+     //  enemy.setyPos(enemy.getyPos()-1);
 
         movePlayer(player.getImage(), this.mouseX, this.mouseY);
 
@@ -315,7 +389,7 @@ public class GameEngine extends SurfaceView implements Runnable {
     }
 
     public void redrawSprites() {
-        //Keeps count of framenumber
+        //Keeps count of FrameNumber
         frameNumber++;
 
         if (this.holder.getSurface().isValid()) {
