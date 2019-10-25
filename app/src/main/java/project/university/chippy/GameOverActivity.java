@@ -13,8 +13,7 @@ import butterknife.OnClick;
 
 public class GameOverActivity extends AppCompatActivity {
 
-    @BindView(R.id.textView)
-    TextView textView;
+
     @BindView(R.id.startNewGame)
     Button startNewGame;
 
