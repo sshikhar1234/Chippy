@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.MediaPlayer;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -56,7 +57,7 @@ public class GameEngine extends SurfaceView implements Runnable {
     int playerHealth=100;
     int enemyHealth=100;
     boolean playerEnemyCollision = false;
-
+    MediaPlayer bgMusic,winSound,gameOver,gameWon;
     public GameEngine(Context context, int w, int h) {
         super(context);
         this.holder = this.getHolder();
@@ -160,6 +161,12 @@ public class GameEngine extends SurfaceView implements Runnable {
                 enemy.getxPos() + 100,
                 enemy.getyPos()
         ));
+
+        //Setup Background Music
+        bgMusic = MediaPlayer.create(context,R.raw.bg_music);
+        gameOver = MediaPlayer.create(context,R.raw.game_over);
+        bgMusic.start();
+
         this.printScreenInfo();
     }
 
@@ -213,6 +220,10 @@ public class GameEngine extends SurfaceView implements Runnable {
         if(playerHealth == 0){
             //Game OVer
             context.startActivity(new Intent(context,GameOverActivity.class));
+            bgMusic.stop();
+            gameOver.start();
+            
+
         }
         Random r = new Random();
 //        int random = r.nextInt(10 + 5) - 10;
@@ -313,11 +324,13 @@ public class GameEngine extends SurfaceView implements Runnable {
                 if(bullet.getHibox().intersect(this.enemy.getHitbox()))
                 {
                     if(enemyHealth>0){
-
                         enemyHealth = enemyHealth - 20;
                     }
                     else
                     {
+                         winSound = MediaPlayer.create(context,R.raw.boom6);
+                        winSound.start();
+
                         Log.d(TAG, "updatePositions: BOOM");
                         enemy.setxPos(-100);
                         enemy.setyPos(-100);
@@ -333,9 +346,9 @@ public class GameEngine extends SurfaceView implements Runnable {
                             legHitbox.left = -100;
                             legHitbox.right = -100;
                         }
-                        //Launch Game Over screen
+                        //Launch Game Win screen
                         context.startActivity(new Intent(context,GameWinAcitivity.class));
-
+                        bgMusic.stop();
                     }
 
                 }
